@@ -2,13 +2,11 @@
 // vim:tabstop=4:shiftwidth=4:expandtab:
 
 /**
- * @file    dpopen.c
+ * @file  dpopen.c
  *
  * Implementation of a duplex pipe stream.
  *
- * @version 1.10, 2004/08/31
- * @author  Wu Yongwei
- *
+ * @date  2025-11-12
  */
 
 #include <errno.h>
@@ -58,8 +56,9 @@ FILE *dpopen(const char *command)
     dpipe_t *chain;
 
     /* Create a duplex pipe using the BSD socketpair call */
-    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fd) < 0)
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fd) < 0) {
         return NULL;
+    }
     parent = fd[0];
     child  = fd[1];
 
@@ -74,21 +73,24 @@ FILE *dpopen(const char *command)
         /* Close the other end */
         close(parent);
         /* Duplicate to stdin and stdout */
-        if (child != STDIN_FILENO)
+        if (child != STDIN_FILENO) {
             if (dup2(child, STDIN_FILENO) < 0) {
                 close(child);
                 return NULL;
             }
-        if (child != STDOUT_FILENO)
+        }
+        if (child != STDOUT_FILENO) {
             if (dup2(child, STDOUT_FILENO) < 0) {
                 close(child);
                 return NULL;
             }
+        }
         /* Close this end too after it is duplicated to standard I/O */
         close(child);
         /* Close all previously opened pipe streams, as popen does */
-        for (chain = chain_hdr; chain != NULL; chain = chain->next)
+        for (chain = chain_hdr; chain != NULL; chain = chain->next) {
             close(fileno(chain_hdr->stream));
+        }
         /* Execute the command via sh */
         execl("/bin/sh", "sh", "-c", command, NULL);
         /* Exit the child process if execl fails */
@@ -152,13 +154,15 @@ int dpclose(FILE *stream)
             pthread_mutex_unlock(&chain_mtx);
 #endif
             free(cur);
-            if (fclose(stream) != 0)
+            if (fclose(stream) != 0) {
                 return -1;
+            }
             do {
                 wait_res = waitpid(pid, &status, 0);
             } while (wait_res == -1 && errno == EINTR);
-            if (wait_res == -1)
+            if (wait_res == -1) {
                 return -1;
+            }
             return status;
         }
         ptr = &cur->next;                   /* Check next */
@@ -181,8 +185,9 @@ int dpclose(FILE *stream)
 int dphalfclose(FILE *stream)
 {
     /* Ensure all data are flushed */
-    if (fflush(stream) == EOF)
+    if (fflush(stream) == EOF) {
         return -1;
+    }
     /* Close pipe for writing */
     return shutdown(fileno(stream), SHUT_WR);
 }

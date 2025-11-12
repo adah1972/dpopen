@@ -2,17 +2,15 @@
 // vim:tabstop=4:shiftwidth=4:expandtab:
 
 /**
- * @file    dpopen.h
+ * @file  dpopen.h
  *
  * Header file of a duplex pipe stream.
  *
- * @version 1.3, 2004/07/26
- * @author  Wu Yongwei
- *
+ * @date  2025-11-12
  */
 
-#ifndef _DPOPEN_H
-#define _DPOPEN_H
+#ifndef DPOPEN_H
+#define DPOPEN_H
 
 #include <stdio.h>
 
@@ -28,4 +26,4 @@ int dphalfclose(FILE *stream);
 }
 #endif
 
-#endif /* _DPOPEN_H */
+#endif /* DPOPEN_H */
