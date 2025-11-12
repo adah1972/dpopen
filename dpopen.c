@@ -88,7 +88,7 @@ FILE *dpopen(const char *command)
         close(child);
         /* Close all previously opened pipe streams, as popen does */
         for (chain = chain_hdr; chain != NULL; chain = chain->next) {
-            close(fileno(chain_hdr->stream));
+            close(fileno(chain->stream));
         }
         /* Execute the command via sh */
         execl("/bin/sh", "sh", "-c", command, NULL);
