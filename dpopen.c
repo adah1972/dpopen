@@ -9,13 +9,14 @@
  * @date  2025-11-12
  */
 
+#include "dpopen.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <sys/wait.h>
 
 #ifdef _REENTRANT
@@ -23,13 +24,11 @@
 static pthread_mutex_t chain_mtx = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
-#include "dpopen.h"
-
 /** Struct to store duplex-pipe-specific information. */
 struct dpipe_chain {
-    FILE *stream;               ///< Pointer to the duplex pipe stream
-    pid_t pid;                  ///< Process ID of the command
-    struct dpipe_chain *next;   ///< Pointer to the next one in chain
+    FILE               *stream;  ///< Pointer to the duplex pipe stream
+    pid_t              pid;      ///< Process ID of the command
+    struct dpipe_chain *next;    ///< Pointer to the next one in chain
 };
 
 /** Typedef to make the struct easier to use. */
@@ -44,13 +43,15 @@ static dpipe_t *chain_hdr;
  * Like \e popen, all previously #dpopen'd pipe streams will be closed
  * in the child process.
  *
- * @param command   the command to execute on \c sh
- * @return          a pointer to an open stream on successful
- *                  completion; \c NULL otherwise
+ * @param command  the command to execute on \c sh
+ * @return         a pointer to an open stream on successful
+ *                 completion; \c NULL otherwise
  */
 FILE *dpopen(const char *command)
 {
-    int     fd[2], parent, child;
+    int     fd[2];
+    int     parent;
+    int     child;
     pid_t   pid;
     FILE    *stream;
     dpipe_t *chain;
@@ -127,15 +128,16 @@ FILE *dpopen(const char *command)
 /**
  * Closes a duplex pipe stream from/to a process.
  *
- * @param stream    pointer to a pipe stream returned from a previous
- *                  #dpopen call
- * @return          the exit status of the command if successful; \c -1
- *                  if an error occurs
+ * @param stream  pointer to a pipe stream returned from a previous
+ *                #dpopen call
+ * @return        the exit status of the command if successful; \c -1
+ *                if an error occurs
  */
 int dpclose(FILE *stream)
 {
-    int status;
-    pid_t pid, wait_res;
+    int     status;
+    pid_t   pid;
+    pid_t   wait_res;
     dpipe_t *cur;
     dpipe_t **ptr;
 
@@ -176,9 +178,9 @@ int dpclose(FILE *stream)
  * Flushes the buffer and sends \c EOF to the process at the other end
  * of the duplex pipe stream.
  *
- * @param stream    pointer to a pipe stream returned from a previous
- *                  #dpopen call
- * @return          \c 0 if successful; \c -1 if an error occurs
+ * @param stream  pointer to a pipe stream returned from a previous
+ *                #dpopen call
+ * @return        \c 0 if successful; \c -1 if an error occurs
  */
 int dphalfclose(FILE *stream)
 {
