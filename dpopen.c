@@ -37,6 +37,37 @@ typedef struct dpipe_chain dpipe_t;
 /** Header of the chain of opened duplex pipe streams. */
 static dpipe_t *chain_hdr;
 
+static void do_child(const char *command, int parent, int child)
+{
+    dpipe_t *chain;
+
+    /* Close the other end */
+    close(parent);
+
+    /* Duplicate to stdin and stdout */
+    if (child != STDIN_FILENO) {
+        if (dup2(child, STDIN_FILENO) < 0) {
+            _exit(126);
+        }
+    }
+    if (child != STDOUT_FILENO) {
+        if (dup2(child, STDOUT_FILENO) < 0) {
+            _exit(126);
+        }
+    }
+
+    /* Close this end too after it is duplicated to standard I/O */
+    close(child);
+
+    /* Close all previously opened pipe streams, as popen does */
+    for (chain = chain_hdr; chain != NULL; chain = chain->next) {
+        close(fileno(chain->stream));
+    }
+
+    /* Execute the command via sh */
+    execl("/bin/sh", "sh", "-c", command, NULL);
+}
+
 /**
  * Initiates a duplex pipe stream from/to a process.
  *
@@ -79,27 +110,8 @@ FILE *dpopen(const char *command)
     }
 
     if (pid == 0) {                         /* child */
-        /* Close the other end */
-        close(parent);
-        /* Duplicate to stdin and stdout */
-        if (child != STDIN_FILENO) {
-            if (dup2(child, STDIN_FILENO) < 0) {
-                _exit(126);
-            }
-        }
-        if (child != STDOUT_FILENO) {
-            if (dup2(child, STDOUT_FILENO) < 0) {
-                _exit(126);
-            }
-        }
-        /* Close this end too after it is duplicated to standard I/O */
-        close(child);
-        /* Close all previously opened pipe streams, as popen does */
-        for (chain = chain_hdr; chain != NULL; chain = chain->next) {
-            close(fileno(chain->stream));
-        }
-        /* Execute the command via sh */
-        execl("/bin/sh", "sh", "-c", command, NULL);
+        /* Do things in the child process; it should not return */
+        do_child(command, parent, child);
         /* Exit the child process if execl fails */
         _exit(127);
     } else {                                /* parent */
