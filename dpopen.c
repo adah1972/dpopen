@@ -6,7 +6,7 @@
  *
  * Implementation of a duplex pipe stream.
  *
- * @date  2025-11-12
+ * @date  2025-11-13
  */
 
 #include "dpopen.h"
@@ -62,6 +62,14 @@ FILE *dpopen(const char *command)
     }
     parent = fd[0];
     child  = fd[1];
+
+#ifdef SO_NOSIGPIPE
+    /* Prevent SIGPIPE on write to closed socket */
+    {
+        int set = 1;
+        setsockopt(parent, SOL_SOCKET, SO_NOSIGPIPE, &set, sizeof(set));
+    }
+#endif
 
     /* Fork the process and check whether it is successful */
     if ( (pid = fork()) < 0) {
