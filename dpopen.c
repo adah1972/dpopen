@@ -84,12 +84,12 @@ FILE *dpopen(const char *command)
         /* Duplicate to stdin and stdout */
         if (child != STDIN_FILENO) {
             if (dup2(child, STDIN_FILENO) < 0) {
-                _exit(127);
+                _exit(126);
             }
         }
         if (child != STDOUT_FILENO) {
             if (dup2(child, STDOUT_FILENO) < 0) {
-                _exit(127);
+                _exit(126);
             }
         }
         /* Close this end too after it is duplicated to standard I/O */
