@@ -6,7 +6,7 @@
  *
  * Header file of a duplex pipe stream.
  *
- * @date  2025-11-12
+ * @date  2025-11-14
  */
 
 #ifndef DPOPEN_H
@@ -17,6 +17,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+int dpopen_raw(const char *command);
+int dpclose_raw(int fd);
+int dphalfclose_raw(int fd);
 
 FILE *dpopen(const char *command);
 int dpclose(FILE *stream);
