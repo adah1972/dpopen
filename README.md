@@ -13,7 +13,7 @@ through a single stream.
 
 The code was part of an article I wrote for IBM developerWorks
 China in 2004.  The site is long gone, but the article can still be
-found online by the title "Linux 上实现双向进程间通信管道" (Implementing
+found online by the title “Linux 上实现双向进程间通信管道” (Implementing
 Duplex Communication Pipes on Linux).  The code needs some update,
 though.
 
@@ -31,11 +31,11 @@ int dpclose_raw(int fd);
 int dphalfclose_raw(int fd);
 ```
 
-- **`dpopen`**/**`dpopen_raw`** – Opens a duplex pipe to execute a shell
+- **`dpopen`**/**`dpopen_raw`**: Opens a duplex pipe to execute a shell
   command
-- **`dpclose`**/**`dpclose_raw`** – Closes the pipe and waits for the
+- **`dpclose`**/**`dpclose_raw`**: Closes the pipe and waits for the
   child process
-- **`dphalfclose`**/**`dphalfclose_raw`** – Sends EOF to the child while
+- **`dphalfclose`**/**`dphalfclose_raw`**: Sends EOF to the child while
   keeping the read channel open
 
 Non-`raw` and `raw` versions differ in that one operates on file streams
@@ -107,7 +107,7 @@ make
 cc -o example dpopen.c example.c
 
 # C++ example
-g++ -std=c++17 -pthread -o pipeline_example \
+c++ -std=c++17 -pthread -o pipeline_example \
      dpopen.c pipeline.cpp pipeline_example.cpp
 ```
 
@@ -126,9 +126,25 @@ deadlock waiting for each other.  To avoid this:
   input before producing output)
 - The C++ `pipeline` function uses separate threads to avoid this issue
 
+**SIGPIPE problem**: If the command is not found, or if it exits before
+the parent process finishes writing all data, `SIGPIPE` may cause the
+parent process to terminate unexpectedly (handling `SIGPIPE` properly in
+a signal handler is practically mission impossible).  The original
+`dpopen` implementation suffers from this problem unless something like
+`signal(SIGPIPE, SIG_IGN);` is executed before `dpopen` is invoked (as
+done in *example.c*).  This problem has been alleviated in the following
+ways:
+
+- If `SO_NOSIGPIPE` is available (as on BSD-derived systems like FreeBSD
+  and macOS), it is used in `dpopen_raw` (and `dpopen`).
+- If `MSG_NOSIGNAL` is available (as on Linux), it is used in the C++
+  wrapper `pipeline`.  Since this requires using `send` instead of
+  `write`, it is only compatible with `dpopen_raw` — this is one of the
+  key motivations for introducing the `raw` functions to the API.
+
 ## Licence
 
-See LICENCE file.
+See *LICENCE* file.
 
 
 <!--
