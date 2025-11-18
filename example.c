@@ -47,7 +47,7 @@ int main()
             fprintf(stderr, "Command terminated by signal %d\n",
                     WTERMSIG(status));
         } else {
-            fprintf(stderr, "Command stopped with signal %d\n",
+            fprintf(stderr, "Command stopped by signal %d\n",
                     WSTOPSIG(status));
         }
     }
